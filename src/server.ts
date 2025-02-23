@@ -1,5 +1,9 @@
+const yaml = require('js-yaml');
 
 import express from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
+import swaggerUi from 'swagger-ui-express';
 import ModelClient from './modelClient';
 import { complianceRequestSchema } from './schema';
 import TextExtraction from './textExtraction';
@@ -9,6 +13,10 @@ app.use(express.json());
 
 // Initialize Gemini model client
 const modelClient = new ModelClient();
+
+// Load OpenAPI spec from YAML file
+const openApiSpecPath = path.join(__dirname, '../openapi.yaml'); // Adjust path if needed
+const openApiSpec = yaml.load(fs.readFileSync(openApiSpecPath, 'utf8')) as object;
 
 app.post('/check-compliance', async (req, res): Promise<any> => {
   try {
@@ -41,6 +49,8 @@ app.post('/check-compliance', async (req, res): Promise<any> => {
     res.status(500).json({ error: error.message || 'An unexpected error occurred' });
   }
 });
+
+app.use('/', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
 // Start server
 const port = 3000;

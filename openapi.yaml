@@ -1,0 +1,146 @@
+openapi: 3.0.0
+info:
+  title: Compliance Checker API
+  description: An API to check webpage content against a compliance policy.
+  version: 1.0.0
+servers:
+  - url: https://compliance-checker-kappa.vercel.app
+    description: Production server
+  - url: http://localhost:3000
+    description: Local development server
+paths:
+  /:
+    get:
+      summary: API Documentation
+      description: Returns the OpenAPI documentation UI.
+      responses:
+        '200':
+          description: Swagger UI HTML page
+          content:
+            text/html:
+              schema:
+                type: string
+  /check-compliance:
+    post:
+      summary: Check webpage compliance
+      description: Analyzes a webpage's content against a given policy and returns compliance findings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComplianceRequest'
+            examples:
+              validRequest:
+                summary: Valid request example
+                value:
+                  webpageUrl: "https://mercury.com/"
+                  policyUrl: "https://stripe.com/docs/treasury/marketing-treasury"
+      responses:
+        '200':
+          description: Compliance check result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceResponse'
+              examples:
+                compliant:
+                  summary: Compliant webpage
+                  value:
+                    isCompliant: true
+                    summary: "The webpage is fully compliant with the policy."
+                    findings: []
+                nonCompliant:
+                  summary: Non-compliant webpage
+                  value:
+                    isCompliant: false
+                    summary: "The webpage has 1 violation(s). Please review the findings for details."
+                    findings:
+                      - webpageSection: "Section: Introduction"
+                        violatingText: "We offer banking services"
+                        policySection: "Section: Prohibited Claims"
+                        policyPart: "You may not state or imply that you provide banking services unless you are a bank."
+                        suggestion: "Replace 'banking services' with 'financial tools' or clarify non-bank status."
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Invalid request body"
+                details:
+                  - field: "webpageUrl"
+                    message: "webpageUrl must be a valid URL"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Network error while fetching https://example.com: Request timed out"
+components:
+  schemas:
+    ComplianceRequest:
+      type: object
+      required:
+        - webpageUrl
+        - policyUrl
+      properties:
+        webpageUrl:
+          type: string
+          format: uri
+          description: The URL of the webpage to check.
+        policyUrl:
+          type: string
+          format: uri
+          description: The URL of the compliance policy.
+    ComplianceResponse:
+      type: object
+      properties:
+        isCompliant:
+          type: boolean
+          description: Whether the webpage complies with the policy.
+        summary:
+          type: string
+          description: A brief summary of the compliance check result.
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Finding'
+          description: List of compliance violations, if any.
+    Finding:
+      type: object
+      properties:
+        webpageSection:
+          type: string
+          description: The section of the webpage containing the violation.
+        violatingText:
+          type: string
+          description: The text that violates the policy.
+        policySection:
+          type: string
+          description: The section of the policy that is violated.
+        policyPart:
+          type: string
+          description: The specific policy rule breached.
+        suggestion:
+          type: string
+          description: How to fix the violation.
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A general error message.
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+          description: Specific validation errors (if applicable).

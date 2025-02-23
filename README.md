@@ -15,7 +15,7 @@ Problem: [https://gist.github.com/ramkumarvenkat/b7026550e859f5881c937d9aaed8bc8
     - Added request validation and verbose errors
 
 ### Try out the solution
-- Deployment link: https://compliance-checker-kappa.vercel.app/check-compliance
+- Deployment link (Check out the swagger docs): https://compliance-checker-kappa.vercel.app
 - Testing with curl
 
 ```bash
